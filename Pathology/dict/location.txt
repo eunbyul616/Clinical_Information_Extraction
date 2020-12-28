@@ -1,0 +1,8 @@
+right upper lobe
+left upper lobe
+right lower lobe
+left lower lobe
+right middle lobe
+left middle lobe
+left main
+right main
