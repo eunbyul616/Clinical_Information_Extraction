@@ -1,30 +1,25 @@
-import pandas as pd
-import numpy as np
-import os
-import glob
-import re
-from tqdm import tqdm
-import collections
-import ast
-import json
 from util import *
 from data import Dataset
 tqdm.pandas()
 
 """
 
-* set variables
-    DATA_PATH: 데이터 경로
-    RESULT_PATH: 최종 결과 파일 저장 경로
-    result_fname: 최종 결과 파일명
-    file_name: 데이터 파일명
-    categories: xlsx 파일 sheet명
-    columns_: 데이터 파일 내 column명
+* 변수
+    - DATA_PATH: 데이터 경로
+    - RESULT_PATH: 최종 결과 파일 저장 경로
+    - result_fname: 최종 결과 파일명
+    - file_name: 데이터 파일명
+    - categories: xlsx 파일 sheet명
+    - columns_: 데이터 파일 내 column명
     
 * 최종 결과 파일
     - final_result.csv 
     - result_fname
     - null.csv : 추출 불가 행
+    
+* 실행 전 수정사항
+    - file_name
+    - categories (.xlxs 파일에서 데이터가 있는 sheet명 리스트)
     
 """
 
@@ -174,7 +169,8 @@ if __name__ == '__main__':
     df_total['tumor_size'] = df_total['histologic diagnosis'].map(lambda x: find_tumor_size(x))
     df_total['histologic diagnosis'] = df_total['histologic diagnosis'].map(lambda x: re.sub(',', ' ', re.split('[0-9\(\)]|(single)', x)[0]).strip())
 
-    t_col = ['#{}'.format(i) for i in range(1, 14)] + ['#{}r'.format(i) for i in range(1, 14)] + ['#{}l'.format(i) for i in range(1, 14)]
+    t_col = ['#{}'.format(i) for i in range(1, 14)] + ['#{}r'.format(i) for i in range(1, 14)] + ['#{}l'.format(i) for i in range(1, 14)] +\
+    ['#{}_test'.format(i) for i in range(1, 14)] + ['#{}r_test'.format(i) for i in range(1, 14)] + ['#{}l_test'.format(i) for i in range(1, 14)]
     t = pd.DataFrame(columns=t_col, index=[i for i in range(df_total.shape[0])])
 
     for idx in range(df_total.shape[0]):
@@ -183,13 +179,13 @@ if __name__ == '__main__':
 
             try:
                 if re.search('[rl]', node_):
-                    t[node_].loc[idx]= positive_.replace('/', '|')
+                    t[node_].loc[idx], t['{}_test'.format(node_)].loc[idx]= int(positive_.split('/')[0]), int(positive_.split('/')[1])
                 else:
                     direction = list(set(df_total['direction'].iloc[idx]))
                     if len(direction) == 1:
                         node_ = node_ + direction[0][0]
 
-                    t[node_].loc[idx]= positive_.replace('/', '|')
+                    t[node_].loc[idx], t['{}_test'.format(node_)].loc[idx] = int(positive_.split('/')[0]), int(positive_.split('/')[1])
 
             except Exception:
                 pass
@@ -204,9 +200,11 @@ if __name__ == '__main__':
 
     # save final results
     total[columns_ +
-           ['organ', 'location', 'opname',
-           'histologic diagnosis', 'lymph_node', 'tumor_size',
-           '#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9', '#10', '#11', '#12', '#13',
-           '#1r', '#2r','#3r', '#4r', '#5r', '#6r', '#7r', '#8r', '#9r', '#10r', '#11r', '#12r',
-           '#13r', '#1l', '#2l', '#3l', '#4l', '#5l', '#6l', '#7l', '#8l', '#9l',
-           '#10l', '#11l', '#12l', '#13l']].to_csv(os.path.join(RESULT_PATH, result_fname), index=False, encoding='utf-8-sig')
+           ['organ', 'location', 'opname','histologic diagnosis', 'lymph_node', 'tumor_size',
+            '#1', '#1_test', '#2', '#2_test', '#3', '#3_test', '#4', '#4_test', '#5', '#5_test', '#6', '#6_test', 
+            '#7', '#7_test', '#8', '#8_test', '#9', '#9_test', '#10', '#10_test', '#11', '#11_test', '#12', '#12_test', '#13', '#13_test',
+            '#1r', '#1r_test', '#2r', '#2r_test', '#3r', '#3r_test', '#4r', '#4r_test', '#5r', '#5r_test', '#6r', '#6r_test', 
+            '#7r', '#7r_test', '#8r', '#8r_test', '#9r', '#9r_test', '#10r', '#10r_test', '#11r', '#11r_test', '#12r', '#12r_test', 
+            '#13r', '#13r_test','#1l', '#1l_test', '#2l', '#2l_test', '#3l', '#3l_test', '#4l', '#4l_test', '#5l', '#5l_test', '#6l', '#6l_test', 
+            '#7l', '#7l_test', '#8l', '#8l_test', '#9l', '#9l_test', '#10l', '#10l_test', '#11l', '#11l_test', '#12l', '#12l_test', '#13l', '#13l_test',
+           ]].to_csv(os.path.join(RESULT_PATH, result_fname), index=False, encoding='utf-8-sig')
